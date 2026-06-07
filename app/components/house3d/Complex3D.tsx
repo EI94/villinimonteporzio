@@ -70,6 +70,8 @@ function Villa({
   const D = 9;
   const floorH = 3.1;
   const H = floorH * 2; // 6.2
+  const base = 1.0;
+  const south = D / 2; // facciata fronte
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
@@ -79,7 +81,8 @@ function Villa({
     };
   }, [hovered]);
 
-  const opacity = dimmed ? 0.5 : 1;
+  const op = dimmed ? 0.5 : 1;
+  const isCorner = UNITS[index].type === 'corner';
 
   return (
     <group
@@ -94,95 +97,125 @@ function Villa({
         onSelect(unitId);
       }}
     >
-      {/* Base in pietra */}
-      <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[W, 1.0, D]} />
-        <meshStandardMaterial color={M.stone} roughness={0.9} transparent opacity={opacity} />
+      {/* Zoccolo in pietra */}
+      <mesh position={[0, base / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[W + 0.04, base, D + 0.04]} />
+        <meshStandardMaterial color={M.stone} roughness={0.92} transparent opacity={op} />
       </mesh>
 
-      {/* Corpo grigio antracite (2 piani) */}
-      <mesh position={[0, 1 + H / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[W, H, D]} />
-        <meshStandardMaterial color={M.facadeGrey} roughness={0.82} transparent opacity={opacity} />
+      {/* Corpo: piano terra antracite */}
+      <mesh position={[0, base + floorH / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[W, floorH, D]} />
+        <meshStandardMaterial color={M.facadeGrey} roughness={0.82} transparent opacity={op} />
+      </mesh>
+      {/* Corpo: piano primo intonaco chiaro (volume più chiaro come nei render) */}
+      <mesh position={[0, base + floorH + floorH / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[W, floorH, D]} />
+        <meshStandardMaterial color={M.white} roughness={0.9} transparent opacity={op} />
       </mesh>
 
-      {/* Inserto pietra verticale sull'angolo (come render) */}
-      <mesh position={[W / 2 - 0.05, 1 + H / 2, D / 2 - 1.2]} castShadow>
-        <boxGeometry args={[0.12, H, 2.2]} />
-        <meshStandardMaterial color={M.stone} roughness={0.9} transparent opacity={opacity} />
+      {/* Pilastro d'angolo in pietra chiara, tutta altezza (fronte-est) */}
+      <mesh position={[W / 2 - 0.06, base + H / 2, south - 1.4]} castShadow>
+        <boxGeometry args={[0.16, H, 2.8]} />
+        <meshStandardMaterial color={M.stone} roughness={0.9} transparent opacity={op} />
+      </mesh>
+      <mesh position={[W / 2 + 0.02, base + H / 2, south - 1.4]}>
+        <boxGeometry args={[0.06, H, 2.8]} />
+        <meshStandardMaterial color={M.stoneDark} roughness={0.95} transparent opacity={op} />
       </mesh>
 
-      {/* Grande vetrata scorrevole a sud (PT) */}
-      <GlassWall position={[0, 1 + 1.5, D / 2 + 0.02]} w={W - 1.6} h={2.6} opacity={opacity} />
-      {/* Finestra a nastro P1 */}
-      <GlassWall position={[-1.2, 1 + floorH + 1.3, D / 2 + 0.02]} w={2.4} h={1.5} opacity={opacity} />
-      {/* Porta d'ingresso laterale */}
-      <mesh position={[W / 2 - 1.6, 1 + 1.1, D / 2 + 0.02]}>
+      {/* === FACCIATA SUD === */}
+      {/* Portale in pietra attorno alla grande vetrata scorrevole (PT) */}
+      <StonePortal x={-0.6} y={base + 1.45} w={3.9} h={2.7} z={south} op={op} />
+      <BigSlider position={[-0.6, base + 1.45, south + 0.07]} w={3.5} h={2.5} op={op} />
+      {/* Ingresso (porta scura) a destra */}
+      <mesh position={[W / 2 - 1.4, base + 1.1, south + 0.04]}>
         <planeGeometry args={[1.0, 2.2]} />
-        <meshStandardMaterial color={M.frame} roughness={0.5} metalness={0.3} transparent opacity={opacity} />
+        <meshStandardMaterial color={M.frame} roughness={0.5} metalness={0.3} transparent opacity={op} />
       </mesh>
-      {/* Plafoniere ovali (render) */}
-      <OvalLight position={[W / 2 - 0.4, 1 + floorH + 0.4, D / 2 + 0.04]} opacity={opacity} />
-      <OvalLight position={[-W / 2 + 0.6, 1 + floorH + 0.4, D / 2 + 0.04]} opacity={opacity} />
+      {/* Fioriera in pietra al piede della vetrata (verde cascante) */}
+      <Planter position={[-2.0, base + 0.15, south + 0.55]} w={1.6} op={op} />
+      {/* Finestra a nastro al primo piano */}
+      <BigSlider position={[-1.4, base + floorH + 1.35, south + 0.05]} w={2.6} h={1.5} op={op} />
+      {/* Plafoniere ovali */}
+      <OvalSconce position={[W / 2 - 0.5, base + floorH + 0.5, south + 0.06]} op={op} />
+      <OvalSconce position={[-W / 2 + 0.7, base + floorH + 0.5, south + 0.06]} op={op} />
+      <OvalSconce position={[W / 2 - 0.5, base + 1.8, south + 0.06]} op={op} />
+
+      {/* === FIANCO EST (per gli angolari, visibile) === */}
+      {isCorner && (
+        <>
+          <BigSlider position={[W / 2 + 0.05, base + 1.5, -1.0]} w={2.2} h={2.4} op={op} rotY={Math.PI / 2} />
+          <OvalSconce position={[W / 2 + 0.06, base + floorH + 0.6, 1.6]} op={op} rotY={Math.PI / 2} />
+          <OvalSconce position={[W / 2 + 0.06, base + floorH + 0.6, -2.2]} op={op} rotY={Math.PI / 2} />
+        </>
+      )}
 
       {/* Cordolo grigio scuro sotto la copertura */}
-      <mesh position={[0, 1 + H + 0.12, 0]}>
-        <boxGeometry args={[W + 0.2, 0.24, D + 0.2]} />
-        <meshStandardMaterial color={M.facadeGreyLight} roughness={0.7} transparent opacity={opacity} />
+      <mesh position={[0, base + H + 0.1, 0]}>
+        <boxGeometry args={[W + 0.22, 0.2, D + 0.22]} />
+        <meshStandardMaterial color={M.facadeGreyLight} roughness={0.7} transparent opacity={op} />
       </mesh>
 
-      {/* ===== COPERTURA: PV + terrazza panoramica con lounge ===== */}
-      <group position={[0, 1 + H + 0.26, 0]}>
-        {/* Solaio di copertura */}
+      {/* ===== COPERTURA: PV (nord) + terrazza lounge (sud) ===== */}
+      <group position={[0, base + H + 0.22, 0]}>
         <mesh receiveShadow>
           <boxGeometry args={[W, 0.12, D]} />
-          <meshStandardMaterial color={M.facadeGreyLight} roughness={0.85} transparent opacity={opacity} />
+          <meshStandardMaterial color="#5A5E66" roughness={0.9} transparent opacity={op} />
         </mesh>
 
-        {/* Campo fotovoltaico (lato nord della copertura), leggermente inclinato */}
-        <group position={[0, 0.18, -D / 4]} rotation={[-0.18, 0, 0]}>
-          <PvField w={W - 1.4} d={D / 2 - 0.8} active={pvActive} ratio={pvRatio} opacity={opacity} />
+        {/* Campo fotovoltaico inclinato */}
+        <group position={[0, 0.2, -D / 4]} rotation={[-0.2, 0, 0]}>
+          <PvField w={W - 1.2} d={D / 2 - 0.7} active={pvActive} ratio={pvRatio} opacity={op} />
         </group>
 
-        {/* Terrazza lounge (lato sud) */}
-        <group position={[0, 0.12, D / 4 + 0.4]}>
-          {/* pavimento legno */}
+        {/* Terrazza panoramica */}
+        <group position={[0, 0.12, D / 4 + 0.5]}>
           <mesh position={[0, 0.02, 0]} receiveShadow>
-            <boxGeometry args={[W - 0.6, 0.06, D / 2 - 0.6]} />
-            <meshStandardMaterial color={M.woodDeck} roughness={0.85} transparent opacity={opacity} />
+            <boxGeometry args={[W - 0.5, 0.06, D / 2 - 0.5]} />
+            <meshStandardMaterial color={M.woodDeck} roughness={0.85} transparent opacity={op} />
           </mesh>
-          {/* divani lounge */}
-          <Lounge position={[-1.4, 0.2, 0.4]} opacity={opacity} />
-          <Lounge position={[1.0, 0.2, -0.6]} opacity={opacity} rot={Math.PI / 2} />
-          {/* vasca idromassaggio */}
-          <mesh position={[1.6, 0.22, 1.0]} castShadow>
-            <boxGeometry args={[1.4, 0.5, 1.4]} />
-            <meshStandardMaterial color={M.frame} roughness={0.6} transparent opacity={opacity} />
+          {/* doghe del deck */}
+          {Array.from({ length: 7 }).map((_, i) => (
+            <mesh key={i} position={[0, 0.06, -(D / 2 - 0.5) / 2 + 0.3 + i * 0.55]}>
+              <boxGeometry args={[W - 0.6, 0.005, 0.04]} />
+              <meshStandardMaterial color={M.woodSlat} roughness={0.9} transparent opacity={op} />
+            </mesh>
+          ))}
+          {/* lounge in rattan + tavolino */}
+          <Lounge position={[-1.5, 0.2, 0.2]} op={op} />
+          <Lounge position={[-1.5, 0.2, 1.4]} op={op} rot={Math.PI} />
+          <mesh position={[-1.5, 0.32, 0.8]} castShadow>
+            <boxGeometry args={[0.7, 0.12, 0.5]} />
+            <meshStandardMaterial color={M.woodSlat} roughness={0.7} transparent opacity={op} />
           </mesh>
-          <mesh position={[1.6, 0.42, 1.0]}>
-            <boxGeometry args={[1.1, 0.12, 1.1]} />
-            <meshStandardMaterial color={M.hotTub} roughness={0.2} metalness={0.3} transparent opacity={opacity * 0.9} />
-          </mesh>
-          {/* pergola a listelli di legno */}
-          <SlatPergola position={[-1.2, 1.2, -1.0]} opacity={opacity} />
-          {/* ringhiera perimetrale terrazza */}
-          <Railing w={W - 0.6} d={D / 2 - 0.6} opacity={opacity} />
+          {/* idromassaggio con acqua */}
+          <HotTub position={[1.7, 0.18, 0.9]} op={op} />
+          {/* pergola triangolare a listelli (lato corpo) */}
+          <SlatCanopy position={[0, 0, -(D / 2 - 0.5) / 2 + 0.2]} w={W - 1.0} op={op} />
+          {/* piante in vaso */}
+          <PottedPlant position={[1.6, 0.1, -0.4]} op={op} />
+          {/* ringhiera a barre orizzontali + fioriere cascanti */}
+          <HBarRail w={W - 0.5} d={D / 2 - 0.5} op={op} />
+          <Planter position={[0, 0.1, (D / 2 - 0.5) / 2 - 0.1]} w={W - 1.6} op={op} cascade />
         </group>
       </group>
 
-      {/* Giardino privato fronte (sud) con deck */}
-      <mesh position={[0, 0.03, D / 2 + 2.2]} receiveShadow>
-        <boxGeometry args={[W - 0.5, 0.06, 3.6]} />
-        <meshStandardMaterial color={M.woodDeck} roughness={0.9} transparent opacity={opacity} />
+      {/* Giardino privato fronte (sud): deck + prato + arbusto fiorito */}
+      <mesh position={[0, 0.04, south + 2.2]} receiveShadow>
+        <boxGeometry args={[W - 0.4, 0.06, 3.4]} />
+        <meshStandardMaterial color={M.woodDeck} roughness={0.9} transparent opacity={op} />
       </mesh>
-      <mesh position={[0, 0.02, D / 2 + 5.2]} receiveShadow>
-        <boxGeometry args={[W, 0.04, 2.4]} />
-        <meshStandardMaterial color={M.grass} roughness={1} transparent opacity={opacity} />
+      <mesh position={[0, 0.02, south + 5.2]} receiveShadow>
+        <boxGeometry args={[W, 0.04, 2.6]} />
+        <meshStandardMaterial color={M.grass} roughness={1} transparent opacity={op} />
       </mesh>
+      <FloweringShrub position={[-W / 2 + 0.5, 0, south + 4.6]} op={op} />
+      <FloweringShrub position={[W / 2 - 0.6, 0, south + 5.2]} op={op} />
 
-      {/* Etichetta nome (solo se selezionato o hover) */}
+      {/* Etichetta nome */}
       {(selected || hovered) && (
-        <Html position={[0, 1 + H + 3.4, 1]} center distanceFactor={26} zIndexRange={[40, 0]}>
+        <Html position={[0, base + H + 3.6, 1]} center distanceFactor={26} zIndexRange={[40, 0]}>
           <div
             className="whitespace-nowrap rounded-full border px-3 py-1 text-[12px] font-semibold shadow-xl backdrop-blur"
             style={{
@@ -197,10 +230,9 @@ function Villa({
         </Html>
       )}
 
-      {/* Anello evidenziazione a terra quando selezionato */}
       {selected && (
         <mesh position={[0, 0.06, 1]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[W * 0.78, W * 0.86, 48]} />
+          <ringGeometry args={[W * 0.82, W * 0.9, 48]} />
           <meshBasicMaterial color="#FFE42B" transparent opacity={0.6} />
         </mesh>
       )}
@@ -208,37 +240,160 @@ function Villa({
   );
 }
 
-function GlassWall({ position, w, h, opacity }: { position: [number, number, number]; w: number; h: number; opacity: number }) {
+/* Portale in pietra chiara attorno a una vetrata */
+function StonePortal({ x, y, w, h, z, op }: { x: number; y: number; w: number; h: number; z: number; op: number }) {
+  const t = 0.22;
   return (
-    <group position={position}>
-      <mesh>
-        <planeGeometry args={[w, h]} />
-        <meshStandardMaterial color={M.glass} metalness={0.85} roughness={0.12} transparent opacity={opacity * 0.9} />
+    <group position={[x, y, z]}>
+      <mesh position={[0, h / 2 + t / 2, 0]}>
+        <boxGeometry args={[w + t * 2, t, 0.18]} />
+        <meshStandardMaterial color={M.stone} roughness={0.9} transparent opacity={op} />
       </mesh>
-      {[-w / 3, w / 6].map((mx, i) => (
-        <mesh key={i} position={[mx, 0, 0.02]}>
-          <boxGeometry args={[0.05, h, 0.04]} />
-          <meshStandardMaterial color={M.frame} transparent opacity={opacity} />
-        </mesh>
-      ))}
-      <mesh position={[0, h / 2, 0.02]}>
-        <boxGeometry args={[w + 0.06, 0.07, 0.05]} />
-        <meshStandardMaterial color={M.frame} transparent opacity={opacity} />
+      <mesh position={[0, -h / 2 - t / 2, 0]}>
+        <boxGeometry args={[w + t * 2, t, 0.18]} />
+        <meshStandardMaterial color={M.stone} roughness={0.9} transparent opacity={op} />
       </mesh>
-      <mesh position={[0, -h / 2, 0.02]}>
-        <boxGeometry args={[w + 0.06, 0.07, 0.05]} />
-        <meshStandardMaterial color={M.frame} transparent opacity={opacity} />
+      <mesh position={[-w / 2 - t / 2, 0, 0]}>
+        <boxGeometry args={[t, h, 0.18]} />
+        <meshStandardMaterial color={M.stone} roughness={0.9} transparent opacity={op} />
+      </mesh>
+      <mesh position={[w / 2 + t / 2, 0, 0]}>
+        <boxGeometry args={[t, h, 0.18]} />
+        <meshStandardMaterial color={M.stone} roughness={0.9} transparent opacity={op} />
       </mesh>
     </group>
   );
 }
 
-function OvalLight({ position, opacity }: { position: [number, number, number]; opacity: number }) {
+/* Grande vetrata scorrevole con telai e maniglia */
+function BigSlider({
+  position,
+  w,
+  h,
+  op,
+  rotY = 0,
+}: {
+  position: [number, number, number];
+  w: number;
+  h: number;
+  op: number;
+  rotY?: number;
+}) {
   return (
-    <mesh position={position}>
-      <circleGeometry args={[0.16, 24]} />
-      <meshStandardMaterial color="#F3F1EC" emissive="#FFF6D8" emissiveIntensity={0.5} transparent opacity={opacity} />
-    </mesh>
+    <group position={position} rotation={[0, rotY, 0]}>
+      <mesh>
+        <planeGeometry args={[w, h]} />
+        <meshStandardMaterial color={M.glass} metalness={0.9} roughness={0.08} transparent opacity={op * 0.92} />
+      </mesh>
+      {/* riflesso cielo */}
+      <mesh position={[0, 0, 0.005]}>
+        <planeGeometry args={[w, h]} />
+        <meshStandardMaterial color="#9DBBD8" transparent opacity={op * 0.12} />
+      </mesh>
+      {/* montanti */}
+      {[-w / 2, -w / 6, w / 6, w / 2].map((mx, i) => (
+        <mesh key={i} position={[mx, 0, 0.03]}>
+          <boxGeometry args={[0.06, h, 0.05]} />
+          <meshStandardMaterial color={M.frame} roughness={0.5} metalness={0.3} transparent opacity={op} />
+        </mesh>
+      ))}
+      <mesh position={[0, h / 2, 0.03]}>
+        <boxGeometry args={[w + 0.04, 0.06, 0.06]} />
+        <meshStandardMaterial color={M.frame} transparent opacity={op} />
+      </mesh>
+      <mesh position={[0, -h / 2, 0.03]}>
+        <boxGeometry args={[w + 0.04, 0.06, 0.06]} />
+        <meshStandardMaterial color={M.frame} transparent opacity={op} />
+      </mesh>
+    </group>
+  );
+}
+
+/* Plafoniera ovale (sconce) come nei render */
+function OvalSconce({ position, op, rotY = 0 }: { position: [number, number, number]; op: number; rotY?: number }) {
+  return (
+    <group position={position} rotation={[0, rotY, 0]} scale={[0.7, 1.2, 1]}>
+      <mesh>
+        <circleGeometry args={[0.17, 24]} />
+        <meshStandardMaterial color="#F6F4EF" emissive="#FFF3D0" emissiveIntensity={0.7} transparent opacity={op} />
+      </mesh>
+    </group>
+  );
+}
+
+/* Fioriera con verde (eventualmente cascante) */
+function Planter({ position, w, op, cascade = false }: { position: [number, number, number]; w: number; op: number; cascade?: boolean }) {
+  return (
+    <group position={position}>
+      <mesh castShadow>
+        <boxGeometry args={[w, 0.34, 0.4]} />
+        <meshStandardMaterial color={M.stone} roughness={0.92} transparent opacity={op} />
+      </mesh>
+      <mesh position={[0, 0.22, 0]}>
+        <boxGeometry args={[w - 0.1, 0.18, 0.34]} />
+        <meshStandardMaterial color="#4E7A3A" roughness={1} transparent opacity={op} />
+      </mesh>
+      {cascade &&
+        Array.from({ length: Math.max(3, Math.round(w / 0.5)) }).map((_, i) => {
+          const px = -w / 2 + 0.3 + i * (w / Math.max(3, Math.round(w / 0.5)));
+          return (
+            <mesh key={i} position={[px, -0.25, 0.2]}>
+              <boxGeometry args={[0.18, 0.7, 0.06]} />
+              <meshStandardMaterial color="#5E8C43" roughness={1} transparent opacity={op} />
+            </mesh>
+          );
+        })}
+    </group>
+  );
+}
+
+/* Idromassaggio con acqua */
+function HotTub({ position, op }: { position: [number, number, number]; op: number }) {
+  return (
+    <group position={position}>
+      <mesh castShadow>
+        <boxGeometry args={[1.5, 0.55, 1.5]} />
+        <meshStandardMaterial color="#23252A" roughness={0.5} metalness={0.3} transparent opacity={op} />
+      </mesh>
+      <mesh position={[0, 0.27, 0]}>
+        <boxGeometry args={[1.2, 0.1, 1.2]} />
+        <meshStandardMaterial color={M.hotTub} roughness={0.15} metalness={0.4} transparent opacity={op * 0.92} />
+      </mesh>
+    </group>
+  );
+}
+
+/* Pianta in vaso (strelitzia/banano stilizzato) */
+function PottedPlant({ position, op }: { position: [number, number, number]; op: number }) {
+  return (
+    <group position={position}>
+      <mesh>
+        <cylinderGeometry args={[0.22, 0.18, 0.4, 12]} />
+        <meshStandardMaterial color="#C9C2B4" roughness={0.9} transparent opacity={op} />
+      </mesh>
+      {[0, 1, 2, 3].map((i) => (
+        <mesh key={i} position={[0, 0.7, 0]} rotation={[0.5, (i * Math.PI) / 2, 0]}>
+          <boxGeometry args={[0.5, 0.9, 0.02]} />
+          <meshStandardMaterial color="#3E6B34" roughness={1} side={THREE.DoubleSide} transparent opacity={op} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/* Arbusto fiorito (oleandro) */
+function FloweringShrub({ position, op }: { position: [number, number, number]; op: number }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.5, 0]} castShadow>
+        <sphereGeometry args={[0.55, 12, 12]} />
+        <meshStandardMaterial color="#3E6B34" roughness={1} transparent opacity={op} />
+      </mesh>
+      <mesh position={[0.2, 0.8, 0.1]}>
+        <sphereGeometry args={[0.3, 10, 10]} />
+        <meshStandardMaterial color="#E9D7E0" roughness={1} transparent opacity={op} />
+      </mesh>
+    </group>
   );
 }
 
@@ -278,51 +433,70 @@ function PvField({ w, d, active, ratio, opacity }: { w: number; d: number; activ
   );
 }
 
-function Lounge({ position, opacity, rot = 0 }: { position: [number, number, number]; opacity: number; rot?: number }) {
+/* Lounge in rattan con cuscini bianchi */
+function Lounge({ position, op, rot = 0 }: { position: [number, number, number]; op: number; rot?: number }) {
   return (
     <group position={position} rotation={[0, rot, 0]}>
       <mesh castShadow>
-        <boxGeometry args={[1.3, 0.3, 0.7]} />
-        <meshStandardMaterial color="#6E7378" roughness={0.85} transparent opacity={opacity} />
+        <boxGeometry args={[1.3, 0.26, 0.7]} />
+        <meshStandardMaterial color="#5C5A54" roughness={0.95} transparent opacity={op} />
       </mesh>
-      <mesh position={[0, 0.28, 0]}>
-        <boxGeometry args={[1.2, 0.16, 0.6]} />
-        <meshStandardMaterial color={M.white} roughness={0.9} transparent opacity={opacity} />
+      <mesh position={[0, 0.26, 0]}>
+        <boxGeometry args={[1.18, 0.16, 0.58]} />
+        <meshStandardMaterial color={M.white} roughness={0.95} transparent opacity={op} />
       </mesh>
-      <mesh position={[0, 0.4, -0.27]}>
-        <boxGeometry args={[1.2, 0.4, 0.12]} />
-        <meshStandardMaterial color={M.white} roughness={0.9} transparent opacity={opacity} />
+      <mesh position={[0, 0.42, -0.27]}>
+        <boxGeometry args={[1.18, 0.42, 0.13]} />
+        <meshStandardMaterial color={M.white} roughness={0.95} transparent opacity={op} />
       </mesh>
     </group>
   );
 }
 
-function SlatPergola({ position, opacity }: { position: [number, number, number]; opacity: number }) {
+/* Pergola/canopy triangolare a listelli inclinati (firma dei render) */
+function SlatCanopy({ position, w, op }: { position: [number, number, number]; w: number; op: number }) {
+  const n = Math.max(8, Math.round(w / 0.4));
   return (
     <group position={position}>
-      {Array.from({ length: 8 }).map((_, i) => (
-        <mesh key={i} position={[-1.2 + i * 0.34, 0, 0]} rotation={[0.5, 0, 0]}>
-          <boxGeometry args={[0.06, 0.06, 2.0]} />
-          <meshStandardMaterial color={M.woodSlat} roughness={0.7} transparent opacity={opacity} />
+      {/* trave di gronda */}
+      <mesh position={[0, 1.7, 0]}>
+        <boxGeometry args={[w, 0.12, 0.12]} />
+        <meshStandardMaterial color={M.frame} roughness={0.6} transparent opacity={op} />
+      </mesh>
+      {/* listelli diagonali */}
+      {Array.from({ length: n }).map((_, i) => (
+        <mesh key={i} position={[-w / 2 + 0.2 + i * ((w - 0.4) / (n - 1)), 0.95, 0.5]} rotation={[-0.62, 0, 0]}>
+          <boxGeometry args={[0.07, 0.07, 1.9]} />
+          <meshStandardMaterial color={M.woodSlat} roughness={0.7} transparent opacity={op} />
         </mesh>
       ))}
     </group>
   );
 }
 
-function Railing({ w, d, opacity }: { w: number; d: number; opacity: number }) {
-  const bars = (length: number, horizontal: boolean) =>
-    [0.25, 0.5, 0.75].map((f, i) => (
-      <mesh key={i} position={[0, 0.2 + f * 0.8, 0]}>
-        <boxGeometry args={horizontal ? [length, 0.03, 0.03] : [0.03, 0.03, length]} />
-        <meshStandardMaterial color={M.railing} roughness={0.5} metalness={0.6} transparent opacity={opacity} />
+/* Ringhiera a barre orizzontali (montanti + 5 correnti) */
+function HBarRail({ w, d, op }: { w: number; d: number; op: number }) {
+  const heights = [0.18, 0.36, 0.54, 0.72, 0.9];
+  const side = (length: number, horizontal: boolean) => (
+    <>
+      {heights.map((hy, i) => (
+        <mesh key={`b${i}`} position={[0, hy, 0]}>
+          <boxGeometry args={horizontal ? [length, 0.022, 0.022] : [0.022, 0.022, length]} />
+          <meshStandardMaterial color={M.railing} roughness={0.5} metalness={0.6} transparent opacity={op} />
+        </mesh>
+      ))}
+      {/* corrimano superiore */}
+      <mesh position={[0, 1.0, 0]}>
+        <boxGeometry args={horizontal ? [length, 0.05, 0.05] : [0.05, 0.05, length]} />
+        <meshStandardMaterial color={M.railing} roughness={0.4} metalness={0.7} transparent opacity={op} />
       </mesh>
-    ));
+    </>
+  );
   return (
     <group>
-      <group position={[0, 0, d / 2]}>{bars(w, true)}</group>
-      <group position={[w / 2, 0, 0]}>{bars(d, false)}</group>
-      <group position={[-w / 2, 0, 0]}>{bars(d, false)}</group>
+      <group position={[0, 0, d / 2]}>{side(w, true)}</group>
+      <group position={[w / 2, 0, 0]}>{side(d, false)}</group>
+      <group position={[-w / 2, 0, 0]}>{side(d, false)}</group>
     </group>
   );
 }
