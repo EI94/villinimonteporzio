@@ -1,26 +1,25 @@
-# Volta · Campotosto Energy OS
+# Volta · Monteporzio Living — Energy OS
 
-Modello digitale e simulazione energetica oraria della casa **Mascioni — Campotosto (AQ)** in pieno Volta Design System.
+Modello digitale e simulazione energetica oraria di **Monteporzio Living** — tre villini a schiera ai Castelli Romani (Monteporzio Catone, RM), in pieno Volta Design System.
+
+## Esperienza
+
+- **Vista aerea** del complesso → **tocca un villino** → compare il nome e la **camera zooma** sull'unità → **dashboard energetica** dedicata.
+- Tre unità con prestazioni distinte: una **interna** (meno disperdente) e due **angolari**.
 
 ## Stack
 
-- **Next.js 14** App Router + TypeScript + Tailwind CSS
-- **Three.js + React Three Fiber + drei** per il modello 3D dell'edificio
-- **Recharts** per i grafici energia, SoC, scambio rete, confronto stagionale
-- **Volta Design System** — token brand, Instrument Sans 500/600, palette `volta-*`
+- **Next.js 14** (App Router) + TypeScript + Tailwind CSS · Volta Design System
+- **Three.js + React Three Fiber** per il complesso 3D (aerial → zoom)
+- **Recharts** per i grafici energia / SoC / scambio rete / stagioni
 
-## Caratteristiche
+## Modello energetico (clima Castelli Romani, zona D)
 
-- Modello 3D interattivo dell'edificio ricostruito dai render esecutivi DTS
-- Simulatore orario annuo (8.760 h) con motori:
-  - Produzione PV (Atlante ENEA Campotosto, tilt/azimuth, derate neve/temperatura)
-  - Pompa di calore con curva COP/EER e backup resistivo
-  - Involucro: dispersioni `U·A·ΔT` + ventilazione VMC + apporti gratuiti
-  - Batteria con 4 strategie di dispatch (autoconsumo / arbitraggio F1-F3 / CER / backup)
-  - Anti-gelo rampa/pedonale/cavo scaldante
-- 4 scenari stagionali (Inverno / Primavera / Estate / Autunno)
-- Tabella economica **Ritiro Dedicato vs Comunità Energetica** (DM MASE 414/2023)
-- Tutti i parametri controllabili: PV, batteria, backup, occupazione, tariffe, setpoint
+- Pompa di calore aria-acqua + **pavimento radiante** (COP elevato), **split** di raffrescamento
+- Infissi **PVC o legno**, **tapparelle motorizzate**, copertura in c.a. (travi rovesce) + vespaio **igloo**
+- Fotovoltaico in copertura, accumulo, **sole geolocalizzato** (lat 41,81°N) per ombre realistiche
+- 4 scenari stagionali, economia (vendita in rete vs autoconsumo collettivo), **CAPEX + detrazione 50% + ROI/payback**
+- Report **PDF / CSV / JSON** con immagine del render
 
 ## Sviluppo
 
@@ -30,13 +29,10 @@ npm run dev
 # http://localhost:3000
 ```
 
-## Build production
+## Deploy (Vercel)
 
-```bash
-npm run build
-npm start
-```
+Progetto Next.js standard: Vercel lo rileva e builda con `next build`. Nessuna configurazione aggiuntiva richiesta.
 
 ## Sito
 
-Coordinate Mascioni (Campotosto, AQ): **42.553°N · 13.391°E · 1.400 m s.l.m.** — Zona climatica F, 3.500 GG.
+Monteporzio Catone (RM) — **41,813°N · 12,722°E · ~450 m s.l.m.** — zona climatica D.
