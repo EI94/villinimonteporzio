@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --volta-black: #000000;
+  --volta-white: #ffffff;
+  --volta-yellow: #ffe42b;
+  --volta-green: #009336;
+  --volta-red: #fb3615;
+  --volta-blue: #359efe;
+  --volta-dark: #1a1a1a;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  background: var(--volta-black);
+  color: var(--volta-white);
+  font-family: 'Instrument Sans', Arial, sans-serif;
+  font-weight: 500;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overscroll-behavior: none;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Utility focus ring brand */
+.volta-focus {
+  outline: none;
+}
+.volta-focus:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--volta-black),
+    0 0 0 4px var(--volta-yellow);
+}
+
+/* Glass surface premium */
+.volta-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Glow giallo per superfici energia */
+.volta-glow-yellow {
+  box-shadow: 0 0 32px rgba(255, 228, 43, 0.15);
+}
+.volta-glow-blue {
+  box-shadow: 0 0 32px rgba(53, 158, 254, 0.15);
+}
+.volta-glow-green {
+  box-shadow: 0 0 32px rgba(0, 147, 54, 0.15);
+}
+
+/* Pattern radiale premium card */
+.volta-radial-hover {
+  background-image: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 228, 43, 0.08) 0%, transparent 50%);
+  transition: background-position 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Linea energia animata SVG */
+.energy-line {
+  stroke-dasharray: 6 6;
+  animation: energy-flow 1.5s linear infinite;
+}
+
+/* Slider range custom Volta */
+input[type='range'].volta-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  outline: none;
+}
+input[type='range'].volta-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--volta-yellow);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--volta-black);
+  box-shadow: 0 0 0 1px rgba(255, 228, 43, 0.4);
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+input[type='range'].volta-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+input[type='range'].volta-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--volta-yellow);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--volta-black);
+}
+
+/* Touch-friendly mobile */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Selezione testo */
+::selection {
+  background: var(--volta-yellow);
+  color: var(--volta-black);
+}
+
+/* Disabled */
+.volta-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}
