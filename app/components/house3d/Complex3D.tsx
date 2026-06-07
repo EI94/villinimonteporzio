@@ -113,6 +113,11 @@ function Villa({
         <boxGeometry args={[W, floorH, D]} />
         <meshStandardMaterial color={M.white} roughness={0.9} transparent opacity={op} />
       </mesh>
+      {/* Rivestimento in pietra travertino sul volume superiore (sud + fianco est) */}
+      <StoneClad position={[1.2, base + floorH + floorH / 2, south + 0.03]} w={W - 2.6} h={floorH - 0.1} op={op} />
+      {isCorner && (
+        <StoneClad position={[W / 2 + 0.03, base + floorH + floorH / 2, -1.5]} w={D - 3} h={floorH - 0.1} op={op} rotY={Math.PI / 2} />
+      )}
 
       {/* Pilastro d'angolo in pietra chiara, tutta altezza (fronte-est) */}
       <mesh position={[W / 2 - 0.06, base + H / 2, south - 1.4]} castShadow>
@@ -156,6 +161,8 @@ function Villa({
         <boxGeometry args={[W + 0.22, 0.2, D + 0.22]} />
         <meshStandardMaterial color={M.facadeGreyLight} roughness={0.7} transparent opacity={op} />
       </mesh>
+      {/* Edera cascante dal parapetto (lato sud, sopra la vetrata) */}
+      <Ivy position={[-1.4, base + H - 0.05, south + 0.12]} w={W - 2.6} drop={1.9} op={op} />
 
       {/* ===== COPERTURA: PV (nord) + terrazza lounge (sud) ===== */}
       <group position={[0, base + H + 0.22, 0]}>
@@ -165,8 +172,19 @@ function Villa({
         </mesh>
 
         {/* Campo fotovoltaico inclinato */}
-        <group position={[0, 0.2, -D / 4]} rotation={[-0.2, 0, 0]}>
-          <PvField w={W - 1.2} d={D / 2 - 0.7} active={pvActive} ratio={pvRatio} opacity={op} />
+        <group position={[-0.5, 0.2, -D / 4]} rotation={[-0.2, 0, 0]}>
+          <PvField w={W - 2.0} d={D / 2 - 0.6} active={pvActive} ratio={pvRatio} opacity={op} />
+        </group>
+        {/* Lucernario complanare accanto al PV */}
+        <group position={[W / 2 - 1.0, 0.1, -D / 4 + 0.2]}>
+          <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[1.1, 1.5]} />
+            <meshStandardMaterial color={M.glass} metalness={0.85} roughness={0.1} transparent opacity={op * 0.9} />
+          </mesh>
+          <mesh position={[0, 0.05, 0]}>
+            <boxGeometry args={[1.2, 0.1, 1.6]} />
+            <meshStandardMaterial color={M.frame} roughness={0.5} transparent opacity={op} wireframe />
+          </mesh>
         </group>
 
         {/* Terrazza panoramica */}
@@ -453,23 +471,105 @@ function Lounge({ position, op, rot = 0 }: { position: [number, number, number];
   );
 }
 
-/* Pergola/canopy triangolare a listelli inclinati (firma dei render) */
+/* Pergola/canopy a falda triangolare con listelli di legno (firma dei render) */
 function SlatCanopy({ position, w, op }: { position: [number, number, number]; w: number; op: number }) {
-  const n = Math.max(8, Math.round(w / 0.4));
+  const n = Math.max(10, Math.round(w / 0.32));
+  const backY = 2.0; // alta sul retro (verso il corpo)
+  const frontY = 0.6; // bassa sul fronte
+  const span = 2.1;
+  const slatLen = Math.sqrt(span * span + (backY - frontY) * (backY - frontY));
+  const tilt = Math.atan2(backY - frontY, span);
   return (
     <group position={position}>
-      {/* trave di gronda */}
-      <mesh position={[0, 1.7, 0]}>
+      {/* montanti posteriori */}
+      {[-w / 2 + 0.15, w / 2 - 0.15].map((px, i) => (
+        <mesh key={`p${i}`} position={[px, backY / 2, -span / 2]}>
+          <boxGeometry args={[0.1, backY, 0.1]} />
+          <meshStandardMaterial color={M.frame} roughness={0.6} transparent opacity={op} />
+        </mesh>
+      ))}
+      {/* trave alta (retro) e trave bassa (fronte) */}
+      <mesh position={[0, backY, -span / 2]}>
         <boxGeometry args={[w, 0.12, 0.12]} />
         <meshStandardMaterial color={M.frame} roughness={0.6} transparent opacity={op} />
       </mesh>
-      {/* listelli diagonali */}
-      {Array.from({ length: n }).map((_, i) => (
-        <mesh key={i} position={[-w / 2 + 0.2 + i * ((w - 0.4) / (n - 1)), 0.95, 0.5]} rotation={[-0.62, 0, 0]}>
-          <boxGeometry args={[0.07, 0.07, 1.9]} />
-          <meshStandardMaterial color={M.woodSlat} roughness={0.7} transparent opacity={op} />
+      <mesh position={[0, frontY, span / 2]}>
+        <boxGeometry args={[w, 0.1, 0.1]} />
+        <meshStandardMaterial color={M.frame} roughness={0.6} transparent opacity={op} />
+      </mesh>
+      {/* listelli di legno inclinati che formano la falda */}
+      {Array.from({ length: n }).map((_, i) => {
+        const px = -w / 2 + 0.18 + i * ((w - 0.36) / (n - 1));
+        return (
+          <mesh key={i} position={[px, (backY + frontY) / 2, 0]} rotation={[tilt, 0, 0]}>
+            <boxGeometry args={[0.07, 0.06, slatLen]} />
+            <meshStandardMaterial color={M.woodSlat} roughness={0.7} transparent opacity={op} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+/* Pannello di rivestimento in pietra chiara con fughe orizzontali (travertino) */
+function StoneClad({
+  position,
+  w,
+  h,
+  op,
+  rotY = 0,
+}: {
+  position: [number, number, number];
+  w: number;
+  h: number;
+  op: number;
+  rotY?: number;
+}) {
+  const rows = Math.max(2, Math.round(h / 0.55));
+  return (
+    <group position={position} rotation={[0, rotY, 0]}>
+      <mesh>
+        <planeGeometry args={[w, h]} />
+        <meshStandardMaterial color={M.stone} roughness={0.92} transparent opacity={op} />
+      </mesh>
+      {/* fughe orizzontali */}
+      {Array.from({ length: rows - 1 }).map((_, i) => (
+        <mesh key={`h${i}`} position={[0, -h / 2 + (i + 1) * (h / rows), 0.01]}>
+          <planeGeometry args={[w, 0.012]} />
+          <meshStandardMaterial color={M.stoneDark} roughness={1} transparent opacity={op} />
         </mesh>
       ))}
+      {/* qualche fuga verticale */}
+      {[-w / 4, w / 4].map((vx, i) => (
+        <mesh key={`v${i}`} position={[vx, 0, 0.01]}>
+          <planeGeometry args={[0.012, h]} />
+          <meshStandardMaterial color={M.stoneDark} roughness={1} transparent opacity={op} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/* Edera cascante dal parapetto lungo la facciata (firma dei render) */
+function Ivy({ position, w, drop, op }: { position: [number, number, number]; w: number; drop: number; op: number }) {
+  const n = Math.max(4, Math.round(w / 0.32));
+  return (
+    <group position={position}>
+      {/* fascia superiore */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[w, 0.18, 0.12]} />
+        <meshStandardMaterial color="#3E6B34" roughness={1} transparent opacity={op} />
+      </mesh>
+      {Array.from({ length: n }).map((_, i) => {
+        const px = -w / 2 + 0.16 + i * ((w - 0.32) / (n - 1));
+        const d = drop * (0.55 + 0.45 * Math.abs(Math.sin(i * 1.7)));
+        return (
+          <mesh key={i} position={[px, -d / 2, 0.04]}>
+            <boxGeometry args={[0.16, d, 0.05]} />
+            <meshStandardMaterial color={i % 2 ? '#4E7A3A' : '#5E8C43'} roughness={1} transparent opacity={op} />
+          </mesh>
+        );
+      })}
     </group>
   );
 }
@@ -523,9 +623,66 @@ function Lot({ season }: { season: SeasonKey }) {
       {/* siepi divisorie tra i villini */}
       <Hedge position={[-SPAN / 2, 0, 2]} length={11} rot={Math.PI / 2} thin />
       <Hedge position={[SPAN / 2, 0, 2]} length={11} rot={Math.PI / 2} thin />
+      {/* siepi angolate agli estremi (lotto trapezoidale) */}
+      <Hedge position={[-16.5, 0, -6]} length={9} rot={Math.PI / 3.2} />
+      <Hedge position={[16.5, 0, -6]} length={9} rot={-Math.PI / 3.2} />
       {/* posti auto agli estremi */}
       <ParkedCar position={[-17, 0, 9.5]} color="#B23A2E" />
       <ParkedCar position={[17, 0, 9.5]} color="#C2502A" />
+      {/* Alberi: salice piangente + alberi tondi sullo sfondo */}
+      <WillowTree position={[-15, 0, -7]} season={season} />
+      <RoundTree position={[14.5, 0, -8]} season={season} scale={1.2} />
+      <RoundTree position={[8, 0, -9.2]} season={season} scale={0.9} />
+      <RoundTree position={[-8, 0, -9.2]} season={season} scale={1.0} />
+      {/* aiuole fiorite verso il fronte */}
+      {[-SPAN, 0, SPAN].map((gx, i) => (
+        <mesh key={i} position={[gx, 0.05, 7.6]} receiveShadow>
+          <boxGeometry args={[4, 0.08, 1.0]} />
+          <meshStandardMaterial color="#4E7A3A" roughness={1} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function WillowTree({ position, season }: { position: [number, number, number]; season: SeasonKey }) {
+  const leaf = season === 'autumn' ? '#9AA24A' : '#6FA050';
+  return (
+    <group position={position}>
+      <mesh position={[0, 2, 0]} castShadow>
+        <cylinderGeometry args={[0.22, 0.34, 4, 8]} />
+        <meshStandardMaterial color="#5A4632" roughness={0.95} />
+      </mesh>
+      <mesh position={[0, 4.4, 0]} castShadow>
+        <sphereGeometry args={[2.6, 14, 14]} />
+        <meshStandardMaterial color={leaf} roughness={1} />
+      </mesh>
+      {/* rami cascanti */}
+      {Array.from({ length: 14 }).map((_, i) => {
+        const a = (i / 14) * Math.PI * 2;
+        return (
+          <mesh key={i} position={[Math.cos(a) * 2.2, 3.1, Math.sin(a) * 2.2]}>
+            <boxGeometry args={[0.12, 2.4, 0.12]} />
+            <meshStandardMaterial color={leaf} roughness={1} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+function RoundTree({ position, season, scale = 1 }: { position: [number, number, number]; season: SeasonKey; scale?: number }) {
+  const leaf = season === 'autumn' ? '#A07A35' : season === 'winter' ? '#5E7350' : '#3E6B34';
+  return (
+    <group position={position} scale={scale}>
+      <mesh position={[0, 1.4, 0]} castShadow>
+        <cylinderGeometry args={[0.18, 0.26, 2.8, 8]} />
+        <meshStandardMaterial color="#4A3525" roughness={0.95} />
+      </mesh>
+      <mesh position={[0, 3.4, 0]} castShadow>
+        <sphereGeometry args={[1.9, 14, 14]} />
+        <meshStandardMaterial color={leaf} roughness={1} />
+      </mesh>
     </group>
   );
 }
